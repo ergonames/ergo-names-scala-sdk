@@ -11,8 +11,8 @@ A published package will be available once Ergo Names is released on mainnet.
 Add this to your build.sbt
 
 ```scala
-lazy val root = (project in file(".")).dependsOn(playJongo)
-lazy val playJongo = RootProject(uri("https://github.com/ergonames/ergo-names-scala.git"))
+lazy val ergonamesSDK = RootProject(uri("https://github.com/ergonames/ergo-names-scala.git"))
+lazy val root = (project in file(".")).dependsOn(ergonamesSDK)
 ```
 
 **To import the functions:**
