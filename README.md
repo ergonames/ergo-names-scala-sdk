@@ -18,7 +18,7 @@ lazy val root = (project in file(".")).dependsOn(ergonamesSDK)
 **To import the functions:**
 
 ```scala
-import ergonames.Sdk.Sdk._
+import ergonames.ErgoNamesSdk.ErgoNamesSdk._
 ```
 
 ## Documentation

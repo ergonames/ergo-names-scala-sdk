@@ -4,7 +4,7 @@ import scalaj.http._
 import spray.json._
 import DefaultJsonProtocol._
 
-object Sdk {
+object ErgoNamesSdk {
 
   val ergonamesMainnetAPIUrl: String = "https://api.ergonames.com"
   val ergonamesTestnetAPIUrl: String = "https://testnet-api.ergonames.com"
