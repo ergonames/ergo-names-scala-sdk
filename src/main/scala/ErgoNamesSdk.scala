@@ -26,11 +26,6 @@ case class Box (
   address: String,
 )
 
-case class BoxResonse (
-  items: List[Box],
-  total: Int,
-)
-
 case class Transaction (
   headerId: String,
   boxId: String,
@@ -45,7 +40,6 @@ object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val tokenFormat = jsonFormat6(Token)
   implicit val tokensResponseFormat = jsonFormat2(TokensResponse.apply)
   implicit val boxFormat = jsonFormat4(Box)
-  implicit val boxResponseFormat = jsonFormat2(BoxResonse)
   implicit val transactionFormat = jsonFormat2(Transaction)
   implicit val transactionsResponseFormat = jsonFormat2(TransactionsResponse)
 }
@@ -119,9 +113,5 @@ object ErgoNamesSdk {
     val json = body.parseJson
     val boxJson = json.convertTo[Box]
     return boxJson.address
-  }
-
-  def main(args: Array[String]): Unit = {
-    println(resolveErgoname("~balb"))
   }
 }
