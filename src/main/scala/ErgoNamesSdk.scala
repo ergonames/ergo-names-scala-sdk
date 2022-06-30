@@ -2,7 +2,6 @@ package ergonames.Sdk
 
 import scalaj.http._
 import spray.json._
-import DefaultJsonProtocol._
 
 case class Token (
   id: String,
@@ -37,11 +36,11 @@ case class TransactionsResponse (
 )
 
 object MyJsonProtocol extends DefaultJsonProtocol {
-  implicit val tokenFormat = jsonFormat6(Token)
-  implicit val tokensResponseFormat = jsonFormat2(TokensResponse.apply)
-  implicit val boxFormat = jsonFormat4(Box)
-  implicit val transactionFormat = jsonFormat2(Transaction)
-  implicit val transactionsResponseFormat = jsonFormat2(TransactionsResponse)
+  implicit val tokenFormat: RootJsonFormat[Token] = jsonFormat6(Token)
+  implicit val tokensResponseFormat: RootJsonFormat[TokensResponse] = jsonFormat2(TokensResponse.apply)
+  implicit val boxFormat: RootJsonFormat[Box] = jsonFormat4(Box)
+  implicit val transactionFormat: RootJsonFormat[Transaction] = jsonFormat2(Transaction)
+  implicit val transactionsResponseFormat: RootJsonFormat[TransactionsResponse] = jsonFormat2(TransactionsResponse)
 }
 
 import MyJsonProtocol._
@@ -57,7 +56,7 @@ object ErgoNamesSdk {
     val last_transaction = get_last_transaction_for_token_by_id(token_id)
     val box_id = last_transaction.boxId
     val address = get_address_for_box_id(box_id)
-    return address
+    address
   }
 
   def get_token_info(name: String): TokensResponse = {
@@ -66,35 +65,26 @@ object ErgoNamesSdk {
     val body = response.body
     val json = body.parseJson
     val tokensResponseJson = json.convertTo[TokensResponse]
-    return tokensResponseJson
+    tokensResponseJson
   }
 
   def convert_token_info_to_array(name: String): Array[Token] = {
     val token_info = get_token_info(name)
-    var token_array = new Array[Token](token_info.total)
+    val token_array = new Array[Token](token_info.total)
     for (i <- 0 until token_info.total) {
       token_array(i) = token_info.items(i)
     }
-    return token_array
+    token_array
   }
 
   def get_asset_minted_at_address(token_array: Array[Token]): String = {
-    for (i <- 0 until token_array.length) {
-      val box_address = get_mint_address_from_box_id(token_array(i).boxId)
+    for (i <- token_array.indices) {
+      val box_address = get_address_for_box_id(token_array(i).boxId)
       if (box_address == MINT_ADDRESS) {
         return token_array(i).id
       }
     }
-    return "None"
-  }
-
-  def get_mint_address_from_box_id(box_id: String): String = {
-    val url: String = EXPLORER_URL + "api/v1/boxes/" + box_id
-    val response = Http(url).asString
-    val body = response.body
-    val json = body.parseJson
-    val boxJson = json.convertTo[Box]
-    return boxJson.address
+    "None"
   }
 
   def get_last_transaction_for_token_by_id(token_id: String): Transaction = {
@@ -103,7 +93,7 @@ object ErgoNamesSdk {
     val body = response.body
     val json = body.parseJson
     val transactionsResponseJson = json.convertTo[TransactionsResponse]
-    return transactionsResponseJson.items(0)
+    transactionsResponseJson.items.head
   }
 
   def get_address_for_box_id(box_id: String): String = {
@@ -112,6 +102,6 @@ object ErgoNamesSdk {
     val body = response.body
     val json = body.parseJson
     val boxJson = json.convertTo[Box]
-    return boxJson.address
+    boxJson.address
   }
 }
