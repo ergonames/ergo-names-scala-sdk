@@ -59,6 +59,51 @@ object ErgoNamesSdk {
     address
   }
 
+  def check_already_registered(name: String): Boolean = {
+    val resolved = resolveErgoname(name)
+    if (resolved == "None") {
+      return false
+    } else {
+      return true
+    }
+  }
+
+  def reverse_search(address: String): String = {
+    "todo"
+  }
+
+  def get_total_amount_owned(address: String): String = {
+    "todo"
+  }
+
+  def check_name_price(name: String): String = {
+    "todo"
+  }
+
+  def get_block_id_registered(name: String): String = {
+    "todo"
+  }
+
+  def get_block_registered(name: String): String = {
+    "todo"
+  }
+
+  def get_timestamp_registered(name: String): String = {
+    "todo"
+  }
+
+  def get_date_registered(name: String): String = {
+    "todo"
+  }
+
+  def reformat_name(name: String): String = {
+    "todo"
+  }
+
+  def check_name_valid(name: String): String = {
+    "todo"
+  }
+
   def get_token_info(name: String): TokensResponse = {
     val url: String = EXPLORER_URL + "api/v1/tokens/search?query=" + name
     val response = Http(url).asString
