@@ -3,6 +3,9 @@ package ergonames.Sdk
 import scalaj.http._
 import spray.json._
 
+import java.util.Date
+import java.text.SimpleDateFormat
+
 case class Token (
   id: String,
   boxId: String,
@@ -10,6 +13,12 @@ case class Token (
   name: String,
   description: String,
   decimals: Int,
+)
+
+case class BalanceToken (
+  tokenId: String,
+  amount: BigInt,
+  name: String,
 )
 
 case class TokensResponse (
@@ -61,8 +70,14 @@ case class Block (
   block: BlockMain,
 )
 
+case class Address (
+  nanoErgs: BigInt,
+  tokens: List[BalanceToken],
+)
+
 object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val tokenFormat: RootJsonFormat[Token] = jsonFormat6(Token)
+  implicit val balanceTokenFormat: RootJsonFormat[BalanceToken] = jsonFormat3(BalanceToken)
   implicit val tokensResponseFormat: RootJsonFormat[TokensResponse] = jsonFormat2(TokensResponse.apply)
   implicit val boxFormat: RootJsonFormat[Box] = jsonFormat4(Box)
   implicit val boxByBoxIdFormat: RootJsonFormat[BoxByBoxId] = jsonFormat4(BoxByBoxId)
@@ -72,6 +87,7 @@ object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val boxByTokenIdFormat: RootJsonFormat[BoxByTokenId] = jsonFormat2(BoxByTokenId)
   implicit val transactionFormat: RootJsonFormat[Transaction] = jsonFormat2(Transaction)
   implicit val transactionsResponseFormat: RootJsonFormat[TransactionsResponse] = jsonFormat2(TransactionsResponse)
+  implicit val addressFormat: RootJsonFormat[Address] = jsonFormat2(Address)
 }
 
 import MyJsonProtocol._
@@ -99,16 +115,20 @@ object ErgoNamesSdk {
     }
   }
 
-  def reverse_search(address: String): String = {
-    "todo"
+  def reverse_search(address: String): Array[BalanceToken] = {
+    val address_data = convert_address_tokens_to_array(address)
+    val correct_names = remove_wrong_named_tokens(address_data)
+    val correct_mint = remove_wrong_address_tokens(correct_names)
+    correct_mint
   }
 
-  def get_total_amount_owned(address: String): String = {
-    "todo"
+  def get_total_amount_owned(address: String): Int = {
+    val array = reverse_search(address)
+    array.length
   }
 
-  def check_name_price(name: String): String = {
-    "todo"
+  def check_name_price(name: String): Int = {
+    0
   }
 
   def get_block_id_registered(name: String): String = {
@@ -137,15 +157,34 @@ object ErgoNamesSdk {
   }
 
   def get_date_registered(name: String): String = {
-    "todo"
+    val timestamp = get_timestamp_registered(name)
+    val date_format = new SimpleDateFormat("MM/dd/yyyy")
+    val formatted_date = date_format.format(timestamp)
+    formatted_date
   }
 
   def reformat_name(name: String): String = {
-    "todo"
+    name.toLowerCase()
   }
 
-  def check_name_valid(name: String): String = {
-    "todo"
+  def check_name_valid(name: String): Boolean = {
+    for (c <- name) {
+      val code = c.toInt
+      if (code <= 44) {
+        return false
+      } else if (code == 47) {
+        return false
+      } else if (code >= 58 && code <= 94) {
+        return false
+      } else if (code == 96) {
+        return false
+      } else if (code >= 123 && code <= 125) {
+        return false
+      } else if (code >= 127) {
+        return false
+      }
+    }
+    true
   }
 
   def get_token_info(name: String): TokensResponse = {
@@ -228,5 +267,68 @@ object ErgoNamesSdk {
     val json = body.parseJson
     val boxJson = json.convertTo[Box]
     boxJson.address
+  }
+
+  def create_address_data(address: String): List[BalanceToken] = {
+    val url: String = EXPLORER_URL + "api/v1/addresses/" + address + "/balance/confirmed"
+    val response = Http(url).asString
+    val body = response.body
+    val json = body.parseJson
+    val addressJson = json.convertTo[Address]
+    val tokens = addressJson.tokens
+    tokens
+  }
+
+  def convert_address_tokens_to_array(address: String): Array[BalanceToken] = {
+    val tokens = create_address_data(address)
+    val token_array = new Array[BalanceToken](tokens.length)
+    for (i <- 0 until tokens.length) {
+      token_array(i) = tokens(i)
+    }
+    token_array
+  }
+
+  def remove_wrong_named_tokens(token_array: Array[BalanceToken]): Array[BalanceToken] = {
+    val token_array_new = new Array[BalanceToken](token_array.length)
+    var i = 0
+    for (j <- 0 until token_array.length) {
+      if (check_name_valid(token_array(j).name)) {
+        token_array_new(i) = token_array(j)
+        i = i + 1
+      }
+    }
+    val token_array_new_new = new Array[BalanceToken](i)
+    for (j <- 0 until i) {
+      token_array_new_new(j) = token_array_new(j)
+    }
+    token_array_new_new
+  }
+
+  def check_correct_minting_address(token_array: Array[BalanceToken]): Boolean = {
+    for (i <- token_array.indices) {
+      val token_id = token_array(i).tokenId
+      val box_id = get_minting_box_id_by_token_id(token_id)
+      val address = get_address_for_box_id(box_id)
+      if (address == MINT_ADDRESS) {
+        return true
+      }
+    }
+    false
+  }
+
+  def remove_wrong_address_tokens(token_array: Array[BalanceToken]): Array[BalanceToken] = {
+    val token_array_new = new Array[BalanceToken](token_array.length)
+    var i = 0
+    for (j <- 0 until token_array.length) {
+      if (check_correct_minting_address(token_array)) {
+        token_array_new(i) = token_array(j)
+        i = i + 1
+      }
+    }
+    val token_array_new_new = new Array[BalanceToken](i)
+    for (j <- 0 until i) {
+      token_array_new_new(j) = token_array_new(j)
+    }
+    token_array_new_new
   }
 }
