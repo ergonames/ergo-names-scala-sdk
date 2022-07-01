@@ -25,6 +25,18 @@ case class Box (
   address: String,
 )
 
+case class BoxByBoxId (
+  boxId: String,
+  blockId: String,
+  address: String,
+  creationHeight: Int,
+)
+
+case class BoxByTokenId (
+  id: String,
+  boxId: String,
+)
+
 case class Transaction (
   headerId: String,
   boxId: String,
@@ -35,10 +47,29 @@ case class TransactionsResponse (
   total: Int,
 )
 
+case class BlockHeader (
+  id: String,
+  height: Int,
+  timestamp: BigInt,
+)
+
+case class BlockMain (
+  header: BlockHeader,
+)
+
+case class Block (
+  block: BlockMain,
+)
+
 object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val tokenFormat: RootJsonFormat[Token] = jsonFormat6(Token)
   implicit val tokensResponseFormat: RootJsonFormat[TokensResponse] = jsonFormat2(TokensResponse.apply)
   implicit val boxFormat: RootJsonFormat[Box] = jsonFormat4(Box)
+  implicit val boxByBoxIdFormat: RootJsonFormat[BoxByBoxId] = jsonFormat4(BoxByBoxId)
+  implicit val blockHeaderFormat: RootJsonFormat[BlockHeader] = jsonFormat3(BlockHeader)
+  implicit val blockMainFormat: RootJsonFormat[BlockMain] = jsonFormat1(BlockMain)
+  implicit val blockFormat: RootJsonFormat[Block] = jsonFormat1(Block)
+  implicit val boxByTokenIdFormat: RootJsonFormat[BoxByTokenId] = jsonFormat2(BoxByTokenId)
   implicit val transactionFormat: RootJsonFormat[Transaction] = jsonFormat2(Transaction)
   implicit val transactionsResponseFormat: RootJsonFormat[TransactionsResponse] = jsonFormat2(TransactionsResponse)
 }
@@ -81,15 +112,28 @@ object ErgoNamesSdk {
   }
 
   def get_block_id_registered(name: String): String = {
-    "todo"
+    val token_array = convert_token_info_to_array(name)
+    val token_id = get_asset_minted_at_address(token_array)
+    val minting_box_id = get_minting_box_id_by_token_id(token_id)
+    val block_id = get_block_id_for_box_by_id(minting_box_id)
+    block_id
   }
 
-  def get_block_registered(name: String): String = {
-    "todo"
+  def get_block_registered(name: String): Int = {
+    val token_array = convert_token_info_to_array(name)
+    val token_id = get_asset_minted_at_address(token_array)
+    val minting_box_id = get_minting_box_id_by_token_id(token_id)
+    val height = get_block_for_box_by_id(minting_box_id)
+    height
   }
 
-  def get_timestamp_registered(name: String): String = {
-    "todo"
+  def get_timestamp_registered(name: String): BigInt = {
+    val token_array = convert_token_info_to_array(name)
+    val token_id = get_asset_minted_at_address(token_array)
+    val minting_box_id = get_minting_box_id_by_token_id(token_id)
+    val block_id = get_block_id_for_box_by_id(minting_box_id)
+    val timestamp = get_timestamp_for_block_by_id(block_id)
+    timestamp
   }
 
   def get_date_registered(name: String): String = {
@@ -139,6 +183,42 @@ object ErgoNamesSdk {
     val json = body.parseJson
     val transactionsResponseJson = json.convertTo[TransactionsResponse]
     transactionsResponseJson.items.head
+  }
+
+  def get_minting_box_id_by_token_id(token_id: String): String = {
+    val url: String = EXPLORER_URL + "api/v1/tokens/" + token_id
+    val response = Http(url).asString
+    val body = response.body
+    val json = body.parseJson
+    val box = json.convertTo[BoxByTokenId]
+    box.boxId
+  }
+
+  def get_block_id_for_box_by_id(box_id: String): String = {
+    val url: String = EXPLORER_URL + "api/v1/boxes/" + box_id
+    val response = Http(url).asString
+    val body = response.body
+    val json = body.parseJson
+    val box = json.convertTo[BoxByBoxId]
+    box.blockId
+  }
+
+  def get_block_for_box_by_id(box_id: String): Int = {
+    val url: String = EXPLORER_URL + "api/v1/boxes/" + box_id
+    val response = Http(url).asString
+    val body = response.body
+    val json = body.parseJson
+    val box = json.convertTo[BoxByBoxId]
+    box.creationHeight
+  }
+
+  def get_timestamp_for_block_by_id(block_id: String): BigInt = {
+    val url: String = EXPLORER_URL + "api/v1/blocks/" + block_id
+    val response = Http(url).asString
+    val body = response.body
+    val json = body.parseJson
+    val timestamp = json.convertTo[Block].block.header.timestamp
+    timestamp
   }
 
   def get_address_for_box_id(box_id: String): String = {
