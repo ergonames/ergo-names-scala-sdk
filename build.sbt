@@ -5,3 +5,7 @@ version := "0.2.0"
 
 libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "2.4.2"
 libraryDependencies += "io.spray" %%  "spray-json" % "1.3.6"
+
+githubOwner := "ergonames"
+githubRepository := "ergo-names-scala-sdk"
+githubTokenSource := TokenSource.GitConfig("github.token")
