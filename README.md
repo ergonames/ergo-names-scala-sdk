@@ -1,38 +1,24 @@
 # Ergo Names Scala SDK
 
-A simple SDK for resolving [Ergo Names](https://ergonames.com).
+### Documentation
 
-## Installation
-
-**To install the library:**
-
-A published package will be available once Ergo Names is released on mainnet.
-
-Add this to your build.sbt
-
-```scala
-lazy val ergonamesSDK = RootProject(uri("https://github.com/ergonames/ergo-names-scala-sdk.git"))
-lazy val root = (project in file(".")).dependsOn(ergonamesSDK)
-```
-
-**To import the functions:**
+Now we can import the package.
 
 ```scala
 import ergonames.Sdk.ErgoNamesSdk._
 ```
 
-## Documentation
-
-Checking if address exists
+To resolve an address from an ErgoName use the **resolve\_ergoname()** function.
 
 ```scala
-val address = getOwnerAddress("bob.ergo")
-println(address)
+val name = "~balb" 
+val address = ergonames.resolveErgoname(name)
 ```
 
-Lookup owner address
+This function will either return a String or a null object.
 
-```scala
-val exists = checkNameExists("bob.ergo")
-println(exists)
+Example result:
+
+```
+3WwKzFjZGrtKAV7qSCoJsZK9iJhLLrUa3uwd4yw52bVtDVv6j5TL
 ```
