@@ -25,19 +25,19 @@ class ErgoNamesSdkTest extends AnyFunSuite {
     }
 
     test("CheckGetBlockIdRegistered") {
-        assert(get_block_id_registered(name) === "155b44501f6f45976623ad5b01f207434daef86a35b5efdec36cde70ef55f3c6")
+        assert(get_block_id_registered(name) === "a5e0ab7f95142ceee7f3b6b5a5318153b345292e9aaae7c56825da115e196d08")
     }
 
     test("CheckGetBlockRegistered") {
-        assert(get_block_registered(name) === 205710)
+        assert(get_block_registered(name) === 60761)
     }
 
     test("CheckGetTimeStampRegistered") {
-        assert(get_timestamp_registered(name) === 1650222939771L)
+        assert(get_timestamp_registered(name) === 1656968987794L)
     }
 
     test("CheckDateRegistered") {
-        assert(get_date_registered(name) === "04/17/2022")
+        assert(get_date_registered(name) === "07/04/2022")
     }
 
     test("CheckTotalAmountOwned") {
@@ -45,7 +45,7 @@ class ErgoNamesSdkTest extends AnyFunSuite {
     }
 
     test("CheckReverseSearch") {
-        val tk = BalanceToken("a22bfbc3545ba99b8a8e4f9fe7841fa7a93e44c6f1e1bcebc65f3ef464b108b1", 1, "~balb")
+        val tk = BalanceToken("2b41b93d22a46de0b0ed9c8b814b766298adbf2ff304f83ee2426f47ac33d9b8", 1, "~balb")
         val arr = Array(tk)
         assert(reverse_search(address) === arr)
     }
