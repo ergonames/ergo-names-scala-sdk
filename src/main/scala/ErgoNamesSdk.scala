@@ -59,7 +59,7 @@ case class TransactionsResponse (
 case class BlockHeader (
   id: String,
   height: Int,
-  timestamp: BigInt,
+  timestamp: Long,
 )
 
 case class BlockMain (
@@ -147,7 +147,7 @@ object ErgoNamesSdk {
     height
   }
 
-  def get_timestamp_registered(name: String): BigInt = {
+  def get_timestamp_registered(name: String): Long = {
     val token_array = convert_token_info_to_array(name)
     val token_id = get_asset_minted_at_address(token_array)
     val minting_box_id = get_minting_box_id_by_token_id(token_id)
@@ -251,7 +251,7 @@ object ErgoNamesSdk {
     box.creationHeight
   }
 
-  private def get_timestamp_for_block_by_id(block_id: String): BigInt = {
+  private def get_timestamp_for_block_by_id(block_id: String): Long = {
     val url: String = EXPLORER_URL + "api/v1/blocks/" + block_id
     val response = Http(url).asString
     val body = response.body
