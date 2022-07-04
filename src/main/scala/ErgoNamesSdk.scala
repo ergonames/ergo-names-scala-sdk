@@ -95,7 +95,7 @@ import MyJsonProtocol._
 object ErgoNamesSdk {
 
   val EXPLORER_URL: String = "https://api-testnet.ergoplatform.com/"
-  val MINT_ADDRESS: String = "3WwKzFjZGrtKAV7qSCoJsZK9iJhLLrUa3uwd4yw52bVtDVv6j5TL"
+  val MINT_ADDRESS: String = "3WycHxEz8ExeEWpUBwvu1FKrpY8YQCiH1S9PfnAvBX1K73BXBXZa"
 
   def resolveErgoname(name: String): String = {
     val token_array = convert_token_info_to_array(name)
