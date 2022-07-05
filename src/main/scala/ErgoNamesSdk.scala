@@ -97,68 +97,92 @@ object ErgoNamesSdk {
   val EXPLORER_URL: String = "https://api-testnet.ergoplatform.com/"
   val MINT_ADDRESS: String = "3WycHxEz8ExeEWpUBwvu1FKrpY8YQCiH1S9PfnAvBX1K73BXBXZa"
 
-  def resolveErgoname(name: String): String = {
+  def main(args: Array[String]): Unit = {
+    println(resolveErgoname("~balb"))
+  }
+
+  def resolveErgoname(name: String): Option[String] = {
     val token_array = convert_token_info_to_array(name)
-    val token_id = get_asset_minted_at_address(token_array)
-    val last_transaction = get_last_transaction_for_token_by_id(token_id)
-    val box_id = last_transaction.boxId
-    val address = get_address_for_box_id(box_id)
-    address
+    if (token_array.length > 0) {
+      val token_id = get_asset_minted_at_address(token_array)
+      val last_transaction = get_last_transaction_for_token_by_id(token_id)
+      val box_id = last_transaction.boxId
+      val address = get_address_for_box_id(box_id)
+      return Some(address)
+    }
+    None
   }
 
   def check_already_registered(name: String): Boolean = {
     val resolved = resolveErgoname(name)
-    if (resolved == "None") {
+    if (resolved == None) {
       return false
     } else {
       return true
     }
   }
 
-  def reverse_search(address: String): Array[BalanceToken] = {
+  def reverse_search(address: String): Option[Array[BalanceToken]] = {
     val address_data = convert_address_tokens_to_array(address)
-    val correct_names = remove_wrong_named_tokens(address_data)
-    val correct_mint = remove_wrong_address_tokens(correct_names)
-    correct_mint
+    if (address_data.length > 0) {
+      val correct_names = remove_wrong_named_tokens(address_data)
+      val correct_mint = remove_wrong_address_tokens(correct_names)
+      return Some(correct_mint)
+    }
+    None
   }
 
-  def get_total_amount_owned(address: String): Int = {
+  def get_total_amount_owned(address: String): Option[Int] = {
     val array = reverse_search(address)
-    array.length
+    if (array != None) {
+      val total = array.get.length
+      return Some(total)
+    } else {
+      None
+    }
   }
 
   def check_name_price(name: String): Int = {
     0
   }
 
-  def get_block_id_registered(name: String): String = {
+  def get_block_id_registered(name: String): Option[String] = {
     val token_array = convert_token_info_to_array(name)
-    val token_id = get_asset_minted_at_address(token_array)
-    val minting_box_id = get_minting_box_id_by_token_id(token_id)
-    val block_id = get_block_id_for_box_by_id(minting_box_id)
-    block_id
+    if (token_array.length > 0) {
+      val token_id = get_asset_minted_at_address(token_array)
+      val minting_box_id = get_minting_box_id_by_token_id(token_id)
+      val block_id = get_block_id_for_box_by_id(minting_box_id)
+      return Some(block_id)
+    }
+    None
   }
 
-  def get_block_registered(name: String): Int = {
+  def get_block_registered(name: String): Option[Int] = {
     val block_id = get_block_id_registered(name)
-    val height = get_height_for_block_by_id(block_id)
-    height
+    if (block_id != None) {
+      val height = get_height_for_block_by_id(block_id.get)
+      return Some(height)
+    }
+    None
   }
 
-  def get_timestamp_registered(name: String): Long = {
-    val token_array = convert_token_info_to_array(name)
-    val token_id = get_asset_minted_at_address(token_array)
-    val minting_box_id = get_minting_box_id_by_token_id(token_id)
-    val block_id = get_block_id_for_box_by_id(minting_box_id)
-    val timestamp = get_timestamp_for_block_by_id(block_id)
-    timestamp
+  def get_timestamp_registered(name: String): Option[Long] = {
+    val block_id = get_block_id_registered(name)
+    if (block_id != None) {
+      val timestamp = get_timestamp_for_block_by_id(block_id.get)
+      return Some(timestamp)
+    }
+    None
   }
 
-  def get_date_registered(name: String): String = {
+  def get_date_registered(name: String): Option[String] = {
     val timestamp = get_timestamp_registered(name)
-    val date_format = new SimpleDateFormat("MM/dd/yyyy")
-    val formatted_date = date_format.format(timestamp)
-    formatted_date
+    if (timestamp != None) {
+      val date_format = new SimpleDateFormat("MM/dd/yyyy")
+      val formatted_date = date_format.format(timestamp.get)
+      return Some(formatted_date)
+    }
+    None
   }
 
   def reformat_name(name: String): String = {
