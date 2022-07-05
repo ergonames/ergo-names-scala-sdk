@@ -97,20 +97,20 @@ object ErgoNamesSdk {
   val EXPLORER_URL: String = "https://api-testnet.ergoplatform.com/"
   val MINT_ADDRESS: String = "3WycHxEz8ExeEWpUBwvu1FKrpY8YQCiH1S9PfnAvBX1K73BXBXZa"
 
-  def resolveErgoname(name: String): Option[String] = {
-    val token_array = convert_token_info_to_array(name)
+  def resolveErgoname(name: String, explorerUrl: String = EXPLORER_URL): Option[String] = {
+    val token_array = convert_token_info_to_array(name, explorerUrl)
     if (token_array.length > 0) {
       val token_id = get_asset_minted_at_address(token_array)
-      val last_transaction = get_last_transaction_for_token_by_id(token_id)
+      val last_transaction = get_last_transaction_for_token_by_id(token_id, explorerUrl)
       val box_id = last_transaction.boxId
-      val address = get_address_for_box_id(box_id)
+      val address = get_address_for_box_id(box_id, explorerUrl)
       return Some(address)
     }
     None
   }
 
-  def check_already_registered(name: String): Boolean = {
-    val resolved = resolveErgoname(name)
+  def check_already_registered(name: String, explorerUrl: String = EXPLORER_URL): Boolean = {
+    val resolved = resolveErgoname(name, explorerUrl)
     if (resolved == None) {
       return false
     } else {
@@ -118,8 +118,8 @@ object ErgoNamesSdk {
     }
   }
 
-  def reverse_search(address: String): Option[Array[BalanceToken]] = {
-    val address_data = convert_address_tokens_to_array(address)
+  def reverse_search(address: String, explorerUrl: String = EXPLORER_URL): Option[Array[BalanceToken]] = {
+    val address_data = convert_address_tokens_to_array(address, explorerUrl)
     if (address_data.length > 0) {
       val correct_names = remove_wrong_named_tokens(address_data)
       val correct_mint = remove_wrong_address_tokens(correct_names)
@@ -128,8 +128,8 @@ object ErgoNamesSdk {
     None
   }
 
-  def get_total_amount_owned(address: String): Option[Int] = {
-    val array = reverse_search(address)
+  def get_total_amount_owned(address: String, explorerUrl: String = EXPLORER_URL): Option[Int] = {
+    val array = reverse_search(address, explorerUrl)
     if (array != None) {
       val total = array.get.length
       return Some(total)
@@ -142,37 +142,37 @@ object ErgoNamesSdk {
     0
   }
 
-  def get_block_id_registered(name: String): Option[String] = {
-    val token_array = convert_token_info_to_array(name)
+  def get_block_id_registered(name: String, explorerUrl: String = EXPLORER_URL): Option[String] = {
+    val token_array = convert_token_info_to_array(name, explorerUrl)
     if (token_array.length > 0) {
-      val token_id = get_asset_minted_at_address(token_array)
-      val minting_box_id = get_minting_box_id_by_token_id(token_id)
-      val block_id = get_block_id_for_box_by_id(minting_box_id)
+      val token_id = get_asset_minted_at_address(token_array, explorerUrl)
+      val minting_box_id = get_minting_box_id_by_token_id(token_id, explorerUrl)
+      val block_id = get_block_id_for_box_by_id(minting_box_id, explorerUrl)
       return Some(block_id)
     }
     None
   }
 
-  def get_block_registered(name: String): Option[Int] = {
-    val block_id = get_block_id_registered(name)
+  def get_block_registered(name: String, explorerUrl: String = EXPLORER_URL): Option[Int] = {
+    val block_id = get_block_id_registered(name, explorerUrl)
     if (block_id != None) {
-      val height = get_height_for_block_by_id(block_id.get)
+      val height = get_height_for_block_by_id(block_id.get, explorerUrl)
       return Some(height)
     }
     None
   }
 
-  def get_timestamp_registered(name: String): Option[Long] = {
-    val block_id = get_block_id_registered(name)
+  def get_timestamp_registered(name: String, explorerUrl: String = EXPLORER_URL): Option[Long] = {
+    val block_id = get_block_id_registered(name, explorerUrl)
     if (block_id != None) {
-      val timestamp = get_timestamp_for_block_by_id(block_id.get)
+      val timestamp = get_timestamp_for_block_by_id(block_id.get, explorerUrl)
       return Some(timestamp)
     }
     None
   }
 
-  def get_date_registered(name: String): Option[String] = {
-    val timestamp = get_timestamp_registered(name)
+  def get_date_registered(name: String, explorerUrl: String = EXPLORER_URL): Option[String] = {
+    val timestamp = get_timestamp_registered(name, explorerUrl)
     if (timestamp != None) {
       val date_format = new SimpleDateFormat("MM/dd/yyyy")
       val formatted_date = date_format.format(timestamp.get)
@@ -206,7 +206,7 @@ object ErgoNamesSdk {
   }
 
   private def get_token_info(name: String, explorerUrl: String = EXPLORER_URL): TokensResponse = {
-    val url: String = EXPLORER_URL + "api/v1/tokens/search?query=" + name
+    val url: String = explorerUrl + "api/v1/tokens/search?query=" + name
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -214,8 +214,8 @@ object ErgoNamesSdk {
     tokensResponseJson
   }
 
-  private def convert_token_info_to_array(name: String): Array[Token] = {
-    val token_info = get_token_info(name)
+  private def convert_token_info_to_array(name: String, explorerUrl: String = EXPLORER_URL): Array[Token] = {
+    val token_info = get_token_info(name, explorerUrl)
     val token_array = new Array[Token](token_info.total)
     for (i <- 0 until token_info.total) {
       token_array(i) = token_info.items(i)
@@ -223,9 +223,9 @@ object ErgoNamesSdk {
     token_array
   }
 
-  private def get_asset_minted_at_address(token_array: Array[Token]): String = {
+  private def get_asset_minted_at_address(token_array: Array[Token], explorerUrl: String = EXPLORER_URL): String = {
     for (i <- token_array.indices) {
-      val box_address = get_address_for_box_id(token_array(i).boxId)
+      val box_address = get_address_for_box_id(token_array(i).boxId, explorerUrl)
       if (box_address == MINT_ADDRESS) {
         return token_array(i).id
       }
@@ -234,7 +234,7 @@ object ErgoNamesSdk {
   }
 
   private def get_last_transaction_for_token_by_id(token_id: String, explorerUrl: String = EXPLORER_URL): Transaction = {
-    val url: String = EXPLORER_URL + "api/v1/assets/search/byTokenId?query=" + token_id
+    val url: String = explorerUrl + "api/v1/assets/search/byTokenId?query=" + token_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -245,7 +245,7 @@ object ErgoNamesSdk {
   }
 
   private def get_minting_box_id_by_token_id(token_id: String, explorerUrl: String = EXPLORER_URL): String = {
-    val url: String = EXPLORER_URL + "api/v1/tokens/" + token_id
+    val url: String = explorerUrl + "api/v1/tokens/" + token_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -254,7 +254,7 @@ object ErgoNamesSdk {
   }
 
   private def get_block_id_for_box_by_id(box_id: String, explorerUrl: String = EXPLORER_URL): String = {
-    val url: String = EXPLORER_URL + "api/v1/boxes/" + box_id
+    val url: String = explorerUrl + "api/v1/boxes/" + box_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -263,7 +263,7 @@ object ErgoNamesSdk {
   }
 
   private def get_block_for_box_by_id(box_id: String, explorerUrl: String = EXPLORER_URL): Int = {
-    val url: String = EXPLORER_URL + "api/v1/boxes/" + box_id
+    val url: String = explorerUrl + "api/v1/boxes/" + box_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -272,7 +272,7 @@ object ErgoNamesSdk {
   }
 
   private def get_height_for_block_by_id(block_id: String, explorerUrl: String = EXPLORER_URL): Int = {
-    val url: String = EXPLORER_URL + "api/v1/blocks/" + block_id
+    val url: String = explorerUrl + "api/v1/blocks/" + block_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -281,7 +281,7 @@ object ErgoNamesSdk {
   }
 
   private def get_timestamp_for_block_by_id(block_id: String, explorerUrl: String = EXPLORER_URL): Long = {
-    val url: String = EXPLORER_URL + "api/v1/blocks/" + block_id
+    val url: String = explorerUrl + "api/v1/blocks/" + block_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -290,7 +290,7 @@ object ErgoNamesSdk {
   }
 
   private def get_address_for_box_id(box_id: String, explorerUrl: String = EXPLORER_URL): String = {
-    val url: String = EXPLORER_URL + "api/v1/boxes/" + box_id
+    val url: String = explorerUrl + "api/v1/boxes/" + box_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -299,7 +299,7 @@ object ErgoNamesSdk {
   }
 
   private def create_address_data(address: String, explorerUrl: String = EXPLORER_URL): List[BalanceToken] = {
-    val url: String = EXPLORER_URL + "api/v1/addresses/" + address + "/balance/confirmed"
+    val url: String = explorerUrl + "api/v1/addresses/" + address + "/balance/confirmed"
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
@@ -308,8 +308,8 @@ object ErgoNamesSdk {
     tokens
   }
 
-  private def convert_address_tokens_to_array(address: String): Array[BalanceToken] = {
-    val tokens = create_address_data(address)
+  private def convert_address_tokens_to_array(address: String, explorerUrl: String = EXPLORER_URL): Array[BalanceToken] = {
+    val tokens = create_address_data(address, explorerUrl)
     val token_array = new Array[BalanceToken](tokens.length)
     for (i <- 0 until tokens.length) {
       token_array(i) = tokens(i)
@@ -333,11 +333,11 @@ object ErgoNamesSdk {
     token_array_new_new
   }
 
-  private def check_correct_minting_address(token_array: Array[BalanceToken]): Boolean = {
+  private def check_correct_minting_address(token_array: Array[BalanceToken], explorerUrl: String = EXPLORER_URL): Boolean = {
     for (i <- token_array.indices) {
       val token_id = token_array(i).tokenId
-      val box_id = get_minting_box_id_by_token_id(token_id)
-      val address = get_address_for_box_id(box_id)
+      val box_id = get_minting_box_id_by_token_id(token_id, explorerUrl)
+      val address = get_address_for_box_id(box_id, explorerUrl)
       if (address == MINT_ADDRESS) {
         return true
       }
@@ -345,11 +345,11 @@ object ErgoNamesSdk {
     false
   }
 
-  private def remove_wrong_address_tokens(token_array: Array[BalanceToken]): Array[BalanceToken] = {
+  private def remove_wrong_address_tokens(token_array: Array[BalanceToken], explorerUrl: String = EXPLORER_URL): Array[BalanceToken] = {
     val token_array_new = new Array[BalanceToken](token_array.length)
     var i = 0
     for (j <- 0 until token_array.length) {
-      if (check_correct_minting_address(token_array)) {
+      if (check_correct_minting_address(token_array, explorerUrl)) {
         token_array_new(i) = token_array(j)
         i = i + 1
       }
