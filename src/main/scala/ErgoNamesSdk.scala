@@ -97,10 +97,6 @@ object ErgoNamesSdk {
   val EXPLORER_URL: String = "https://api-testnet.ergoplatform.com/"
   val MINT_ADDRESS: String = "3WycHxEz8ExeEWpUBwvu1FKrpY8YQCiH1S9PfnAvBX1K73BXBXZa"
 
-  def main(args: Array[String]): Unit = {
-    println(resolveErgoname("~balb"))
-  }
-
   def resolveErgoname(name: String): Option[String] = {
     val token_array = convert_token_info_to_array(name)
     if (token_array.length > 0) {
