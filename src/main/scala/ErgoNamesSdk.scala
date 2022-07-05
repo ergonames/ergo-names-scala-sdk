@@ -140,10 +140,8 @@ object ErgoNamesSdk {
   }
 
   def get_block_registered(name: String): Int = {
-    val token_array = convert_token_info_to_array(name)
-    val token_id = get_asset_minted_at_address(token_array)
-    val minting_box_id = get_minting_box_id_by_token_id(token_id)
-    val height = get_block_for_box_by_id(minting_box_id)
+    val block_id = get_block_id_registered(name)
+    val height = get_height_for_block_by_id(block_id)
     height
   }
 
@@ -216,12 +214,14 @@ object ErgoNamesSdk {
   }
 
   private def get_last_transaction_for_token_by_id(token_id: String): Transaction = {
-    val url: String = EXPLORER_URL + "api/v1/assets/search/byTokenId?query=" + token_id + "&limit=1"
+    val url: String = EXPLORER_URL + "api/v1/assets/search/byTokenId?query=" + token_id
     val response = Http(url).asString
     val body = response.body
     val json = body.parseJson
     val transactionsResponseJson = json.convertTo[TransactionsResponse]
-    transactionsResponseJson.items.head
+    val total = transactionsResponseJson.total
+    val last = transactionsResponseJson.items(total - 1)
+    last
   }
 
   private def get_minting_box_id_by_token_id(token_id: String): String = {
@@ -249,6 +249,15 @@ object ErgoNamesSdk {
     val json = body.parseJson
     val box = json.convertTo[BoxByBoxId]
     box.creationHeight
+  }
+
+  private def get_height_for_block_by_id(block_id: String): Int = {
+    val url: String = EXPLORER_URL + "api/v1/blocks/" + block_id
+    val response = Http(url).asString
+    val body = response.body
+    val json = body.parseJson
+    val height = json.convertTo[Block].block.header.height
+    height
   }
 
   private def get_timestamp_for_block_by_id(block_id: String): Long = {
