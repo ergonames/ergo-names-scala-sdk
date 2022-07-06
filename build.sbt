@@ -10,3 +10,4 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.11" % Test
 githubOwner := "ergonames"
 githubRepository := "ergo-names-scala-sdk"
 githubTokenSource := TokenSource.GitConfig("github.token")
+pushRemoteCacheConfiguration := pushRemoteCacheConfiguration.value.withOverwrite(true)
