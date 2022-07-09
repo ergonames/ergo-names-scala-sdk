@@ -239,8 +239,7 @@ object ErgoNamesSdk {
     val body = response.body
     val json = body.parseJson
     val transactionsResponseJson = json.convertTo[TransactionsResponse]
-    val total = transactionsResponseJson.total
-    val last = transactionsResponseJson.items(total - 1)
+    val last = transactionsResponseJson.items(0)
     last
   }
 
