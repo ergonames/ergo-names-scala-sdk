@@ -239,8 +239,26 @@ object ErgoNamesSdk {
     val body = response.body
     val json = body.parseJson
     val transactionsResponseJson = json.convertTo[TransactionsResponse]
-    val last = transactionsResponseJson.items(0)
-    last
+    var last_transaction: Transaction = transactionsResponseJson.items(0)
+    var creation_height = 0
+    for (i <- transactionsResponseJson.total.toInt - 1 to 0 by -1) {
+      val box_id = transactionsResponseJson.items(i).boxId
+      val box_info = get_box_info_by_id(box_id, explorerUrl)
+      if (box_info.creationHeight > creation_height) {
+        creation_height = box_info.creationHeight
+        last_transaction = transactionsResponseJson.items(i)
+      }
+    }
+    last_transaction
+  }
+
+  private def get_box_info_by_id(box_id: String, explorerUrl: String = EXPLORER_URL): BoxByBoxId = {
+    val url: String = explorerUrl + "api/v1/boxes/" + box_id
+    val response = Http(url).asString
+    val body = response.body
+    val json = body.parseJson
+    val boxInfoJson = json.convertTo[BoxByBoxId]
+    boxInfoJson
   }
 
   private def get_minting_box_id_by_token_id(token_id: String, explorerUrl: String = EXPLORER_URL): String = {
