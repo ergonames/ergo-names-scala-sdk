@@ -1,6 +1,6 @@
 name := "ergonames"
 organization := "ergonames"
-version := "0.3.1"
+version := "0.4.0"
 scalaVersion := "2.13.8"
 
 libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "2.4.2"
